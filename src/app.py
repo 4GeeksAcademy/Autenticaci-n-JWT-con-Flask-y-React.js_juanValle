@@ -7,7 +7,7 @@ from flask_migrate import Migrate
 from flask_swagger import swagger
 from api.utils import APIException, generate_sitemap
 from flask_jwt_extended import JWTManager
-from api.models import db
+from api.models import db, TokenBlocklist
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
@@ -22,8 +22,23 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 
 # JWT Configuration
+# Primero se configura el JWT_SECRET_KEY para generar los tokens, tomando el valor de las variables de entorno
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_APP_KEY")
+# Se crea la instancia de jwt
 jwt = JWTManager(app)
+
+# Se registra el decorador que valida los tokens bloqueados
+
+
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
+    # Toma el jti del token
+    jti = jwt_payload["jti"]
+    # Busca el jti  en la lista de token bloqueados
+    token = TokenBlocklist.query.filter_by(jti=jti).first()
+    # Retorna si consiguio el jti o no. Si lo consigue la petición se bloquea, sino continúa.
+    return token is not None
+
 
 # database condiguration
 db_url = os.getenv("DATABASE_URL")
