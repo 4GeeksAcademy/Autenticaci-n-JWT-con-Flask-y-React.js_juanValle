@@ -1,5 +1,6 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { useNavigate } from "react-router-dom";
 import { login } from "../fetch/user.js";
 
 export const Login = () => {
@@ -7,6 +8,13 @@ export const Login = () => {
     const { store, dispatch } = useGlobalReducer()
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const navigate = useNavigate()
+
+    useEffect(() => {
+        if (store.token) {
+            navigate("/")
+        }
+    }, [store.token])
 
 
     async function formSubmit(e) {
@@ -22,6 +30,7 @@ export const Login = () => {
         }
         // Navegar al Home
         console.log("Sesion iniciada")
+        navigate("/")
     }
 
     return <div>
